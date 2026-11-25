@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="hy">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Աթենք և Սպարտա — խաղ</title>
+<style>
+:root{--bg:#f4eee8;--ink:#463426;--accent:#8b6545;--card:#fffaf5}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(145deg,#e9ded3,#f8f4ef);font-family:system-ui,-apple-system,"Noto Sans Armenian",sans-serif;color:var(--ink);min-height:100vh;padding:22px}
+main{max-width:720px;margin:0 auto}.hero{text-align:center;padding:20px 12px}.hero .emoji{font-size:42px}.hero h1{margin:8px 0;font-size:clamp(27px,6vw,40px)}.hero p{margin:0;color:#765f4c}
+.card{background:var(--card);border:2px solid #c9b6a5;border-radius:22px;padding:22px;box-shadow:0 12px 35px #59432b18}
+.top{display:flex;justify-content:space-between;gap:12px;align-items:center;font-weight:700;font-size:14px}.bar{height:9px;background:#eadfd5;border-radius:20px;margin:14px 0 22px;overflow:hidden}.fill{height:100%;width:0;background:#9b704d;transition:width .2s}
+h2{font-size:clamp(20px,4vw,26px);line-height:1.45;margin:0 0 18px}.answers{display:grid;gap:11px}.answer{width:100%;border:2px solid #d9c8b9;border-radius:14px;padding:14px;text-align:left;background:#fff;color:var(--ink);font:inherit;font-size:16px;cursor:pointer}.answer:hover{border-color:#9b704d;background:#fbf4ed}.answer:disabled{cursor:default}.answer.correct{border-color:#27834b;background:#e8f5eb}.answer.wrong{border-color:#c34b42;background:#fff0ee}
+.feedback{min-height:28px;margin:14px 0;font-weight:700}.actions{display:flex;gap:10px;flex-wrap:wrap}.btn{border:0;border-radius:13px;padding:13px 18px;background:#745238;color:white;font:inherit;font-weight:700;cursor:pointer}.btn:disabled{opacity:.4;cursor:not-allowed}.btn.secondary{background:#e9ded3;color:#4c392b}
+.result{text-align:center}.score{font-size:48px;font-weight:800;margin:8px}.small{font-size:13px;color:#806d5c;margin-top:16px}
+@media(max-width:480px){body{padding:12px}.card{padding:17px}.answer{font-size:15px}}
+</style>
+</head>
+<body>
+<main>
+ <header class="hero"><div class="emoji">🏛️⚔️</div><h1>Աթենք և Սպարտա</h1><p>Ստուգիր գիտելիքներդ Հին Հունաստանի մասին</p></header>
+ <section class="card" id="game">
+  <div class="top"><span id="counter">Հարց 1 / 15</span><span id="points">Միավոր՝ 0</span></div>
+  <div class="bar"><div class="fill" id="fill"></div></div>
+  <h2 id="question"></h2>
+  <div class="answers" id="answers"></div>
+  <div class="feedback" id="feedback" aria-live="polite"></div>
+  <div class="actions"><button class="btn" id="next" disabled>Հաջորդ հարցը →</button></div>
+  <p class="small">Ընտրիր մեկ պատասխան։ Վերջում կտեսնես արդյունքդ։</p>
+ </section>
+</main>
+<script>
+const qs = [
+{q:"Ք.ա. ո՞ր թվականին Սոլոնը Աթենքում իրականացրեց իր բարեփոխումները։",a:["Ք.ա. 594 թ.","Ք.ա. 480 թ.","Ք.ա. 300 թ."],c:0},
+{q:"Ո՞րն էր Աթենքի կառավարման համակարգի կարևոր առանձնահատկությունը՝ ըստ նյութի։",a:["Քաղաքացիների մասնակցությունը պետական կառավարմանը","Միայն մեկ մարդու իշխանությունը","Բոլոր բնակիչների լիակատար հավասարությունը"],c:0},
+{q:"Ինչպե՞ս էր կոչվում Աթենքի ժողովրդական ժողովը։",a:["Ապելլա","Էկլեսիա","Գերուսիա"],c:1},
+{q:"Ո՞րն էր Աթենքի գլխավոր օրենսդիր մարմինը՝ ըստ ներկայացված նյութի։",a:["Աշխարհաժողովը՝ էկլեսիան","Սպարտայի խորհուրդը","Արքայական պալատը"],c:0},
+{q:"Ի՞նչ էր Ակրոպոլիսը։",a:["Ստորին քաղաքը","Վերին քաղաքը","Նավահանգիստը"],c:1},
+{q:"Որտե՞ղ էր գտնվում Աթենքի Ակրոպոլիսը։",a:["Հունաստանի մայրաքաղաք Աթենքի կենտրոնում՝ բլրի վրա","Սպարտայի նավահանգստում","Կրետե կղզում"],c:0},
+{q:"Մոտավորապես ի՞նչ բարձրություն ուներ Ակրոպոլիսի բլուրը՝ ըստ նյութի։",a:["50 մետր","150 մետր","500 մետր"],c:1},
+{q:"Ո՞ր դարում Ակրոպոլիսը ստացավ իր հիմնական տեսքը՝ ըստ նյութի։",a:["Ք.ա. 5-րդ դարում","Ք.ա. 2-րդ դարում","Մ.թ. 5-րդ դարում"],c:0},
+{q:"Ինչպիսի՞ բնույթ ուներ Սպարտայի պոլիսը։",a:["Ժողովրդավարական","Օլիգարխիական","Միապետական"],c:1},
+{q:"Սպարտայի բնակչությունը բաղկացած էր ո՞ր երկու հիմնական դասերից։",a:["Սպարտիատներից և հելոտներից","Աթենացիներից և պարսիկներից","Արքաներից և վաճառականներից"],c:0},
+{q:"Ո՞ր խումբն էր Սպարտայում փոքրաքանակ և ուներ լիիրավ քաղաքացիների կարգավիճակ։",a:["Հելոտները","Սպարտիատները","Օտարերկրացիները"],c:1},
+{q:"Ինչո՞վ չէին զբաղվում սպարտիատները։",a:["Երկրագործությամբ և արհեստներով","Ռազմական գործով","Պետական կյանքով"],c:0},
+{q:"Ինչպե՞ս էր կոչվում Սպարտայի ազգային ժողովը։",a:["Էկլեսիա","Ապելլա","Բուլե"],c:1},
+{q:"Ո՞ր թվականին է տեղի ունեցել Թերմոպիլեի ճակատամարտը, որում կռվել է Լեոնիդասը։",a:["Ք.ա. 594 թ.","Ք.ա. 480 թ.","Ք.ա. 1969 թ."],c:1},
+{q:"Քանի՞ սպարտացի է հիշատակվում Լեոնիդասի և Թերմոպիլեի ճակատամարտի մասին էջում։",a:["100","300","1000"],c:1}
+];
+let i=0,score=0,chosen=false;
+const $=id=>document.getElementById(id);
+function render(){
+ chosen=false;$("counter").textContent=`Հարց ${i+1} / ${qs.length}`;$("points").textContent=`Միավոր՝ ${score}`;
+ $("fill").style.width=`${i/qs.length*100}%`;$("question").textContent=qs[i].q;$("feedback").textContent="";
+ $("answers").innerHTML="";
+ qs[i].a.forEach((v,j)=>{let b=document.createElement("button");b.className="answer";b.textContent=["Ա) ","Բ) ","Գ) "][j]+v;b.onclick=()=>pick(j);$("answers").appendChild(b)});
+ $("next").disabled=true;$("next").textContent=i===qs.length-1?"Տեսնել արդյունքը":"Հաջորդ հարցը →";
+}
+function pick(j){
+ if(chosen)return;chosen=true;let q=qs[i];[...$("answers").children].forEach((b,k)=>{b.disabled=true;if(k===q.c)b.classList.add("correct");if(k===j&&j!==q.c)b.classList.add("wrong")});
+ if(j===q.c){score++;$("feedback").textContent="Ճիշտ է՛։ Ապրե՛ս։";$("feedback").style.color="#27834b"}else{$("feedback").textContent="Այս անգամ՝ ոչ։ Ճիշտ պատասխանն է՝ "+["Ա","Բ","Գ"][q.c]+"։";$("feedback").style.color="#b3433a"}
+ $("points").textContent=`Միավոր՝ ${score}`;$("next").disabled=false;
+}
+function finish(){
+ $("fill").style.width="100%";
+ $("game").innerHTML=`<div class="result"><div style="font-size:48px">🏆</div><h2>Խաղն ավարտվեց։</h2><div class="score">${score} / ${qs.length}</div><p>${score>=13?"Գերազանց արդյունք։ Դու լավ գիտես Աթենքն ու Սպարտան։":score>=9?"Շատ լավ է։ Մի փոքր էլ կրկնիր նյութը։":"Կրկնիր նյութը և փորձիր նորից։"}</p><button class="btn" onclick="location.reload()">Կրկին խաղալ ↻</button><p class="small">Աթենք և Սպարտա • Հին Հունաստան</p></div>`;
+}
+$("next").onclick=()=>{if(i<qs.length-1){i++;render()}else finish()};
+render();
+</script>
+</body></html>
